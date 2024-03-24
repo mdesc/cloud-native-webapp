@@ -1,0 +1,199 @@
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.4/css/bulma.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://use.fontawesome.com/releases/v5.7.2/css/all.css"
+      integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr"
+      crossorigin="anonymous"
+    />
+    <style>
+      body {
+        padding-top: 30px;
+        padding-left: 60px;
+        background-color: #f2f2f2;
+        font-family: Arial, sans-serif;
+        text-align: center;
+      }
+
+      .post-it {
+        background-color: #f7ecd5;
+        padding: 20px;
+        margin-bottom: 20px;
+        border: 2px solid #ffd166;
+        border-radius: 10px;
+        box-shadow: 3px 3px 5px rgba(0, 0, 0, 0.2);
+        max-width: 600px;
+        margin-right: auto;
+        margin-left: auto;
+      }
+
+      .post-it-content {
+        margin-bottom: 10px;
+      }
+
+      .todo-list {
+        list-style-type: none;
+        padding-left: 0;
+      }
+
+      .todo-item {
+        background-color: #fff;
+        padding: 10px;
+        margin-bottom: 5px;
+        border-radius: 5px;
+        box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+        display: flex;
+        justify-content: space-between;
+      }
+
+      .todo-item-count {
+        padding-right: 10px;
+      }
+
+      .control {
+        display: flex;
+        align-items: last baseline;
+        justify-content: center;
+      }
+    </style>
+
+    <script type="text/javascript">
+      function getItem() {
+        console.log("getItem()");
+        $.ajax({
+          type: "GET",
+          url: "BACKENDURL/lambdadb",
+          crossDomain: true,
+          contentType: "application/json",
+          success: function (response) {
+            var items = response.listeCourse.split(",");
+            var itemMap = {};
+
+            items.forEach(function (item) {
+              if (item in itemMap) {
+                itemMap[item]++;
+              } else {
+                itemMap[item] = 1;
+              }
+            });
+
+            var html = "";
+            for (var itemName in itemMap) {
+              if (itemMap.hasOwnProperty(itemName)) {
+                if (itemName.trim() !== "") {
+                  html += `<li class="todo-item">${itemName} x ${itemMap[itemName]}</li>`;
+                }
+              }
+            }
+            $("#listeCourse").html(`<ul class="todo-list">${html}</ul>`);
+          },
+        });
+      }
+    </script>
+
+    <script type="text/javascript">
+      function postItem(e) {
+        e.preventDefault();
+        var ingredient = $("#ingredient").val();
+        console.log(`postItem() - '${ingredient}'`);
+
+        var data = ingredient;
+
+        $.ajax({
+          type: "POST",
+          url: "BACKENDURL/lambdadb",
+          crossDomain: true,
+          dataType: "json",
+          contentType: "application/json",
+          data,
+          success: function (response) {
+            console.log("item added: ", response);
+            getItem();
+          },
+        });
+      }
+    </script>
+
+    <script type="text/javascript">
+      function deleteItems(e) {
+        e.preventDefault();
+        var ingredient = $("#ingredient").val();
+
+        $.ajax({
+          type: "DELETE",
+          url: "BACKENDURL/lambdadb",
+          crossDomain: true,
+          success: function () {
+            getItem();
+          },
+        });
+      }
+    </script>
+  </head>
+
+  <body>
+    <h1 class="title">Cloud native shopping list</h1>
+    <br />
+    <h2 class="subtitle is-4">Add to list :</h2>
+    <form id="contact-form" method="post">
+      <div class="control has-icons-left">
+        <div class="select">
+          <select id="ingredient">
+            <option value="Milk">Milk</option>
+            <option value="Bread">Bread</option>
+            <option value="Egg">Egg</option>
+            <option value="Butter">Butter</option>
+            <option value="Chicken">Chicken</option>
+            <option value="Cheese">Cheese</option>
+            <option value="Flour">Flour</option>
+            <option value="Beef">Beef</option>
+            <option value="Lemon">Lemon</option>
+            <option value="Oil">oil</option>
+          </select>
+          <div class="icon is-small is-left">
+            <i class="fas fa-utensils"></i>
+          </div>
+        </div>
+
+        <button
+          class="button is-4 is-primary"
+          type="button"
+          onClick="postItem(event)"
+          class="btn btn-lg"
+          style="margin-top: 20px"
+        >
+          Add
+        </button>
+      </div>
+    </form>
+
+    <br />
+    <h2 class="subtitle is-4">My shopping list :</h2>
+    <br />
+    <br />
+
+    <div id="listeCourse" class="post-it">
+      <ul class="todo-list"></ul>
+    </div>
+
+    <button
+      class="button is-medium is-danger is-rounded"
+      type="button"
+      onClick="deleteItems(event)"
+      class="btn btn-lg"
+      style="margin-top: 20px"
+    >
+      Clear
+    </button>
+
+    <script>
+      getItem();
+    </script>
+  </body>
+</html>
